@@ -1,3 +1,33 @@
+<?php
+include('../../config/dbconn.php');
+
+// Redirect to index page if the user is not authenticated
+if (!isset($_SESSION['userid'])) {
+    header('Location: ../../index.php');
+    exit();
+}
+
+$userId = $_SESSION['userid'];
+
+// Fetch user-specific data from the database
+$sqlUser = "SELECT u.*, r.RoleName FROM tbluser u
+            INNER JOIN tblrole r ON u.RoleId = r.id
+            WHERE u.id = :userId";
+$stmtUser = $dbh->prepare($sqlUser);
+$stmtUser->bindParam(':userId', $userId, PDO::PARAM_INT);
+$stmtUser->execute();
+$user = $stmtUser->fetch(PDO::FETCH_ASSOC);
+
+// Fetch notification count for the current user
+$sqlNotifications = "SELECT COUNT(*) AS notification_count
+                     FROM tblrequests
+                     WHERE user_id = :userId AND status = 'approved'";
+$stmtNotifications = $dbh->prepare($sqlNotifications);
+$stmtNotifications->bindParam(':userId', $userId, PDO::PARAM_INT);
+$stmtNotifications->execute();
+$notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_count'];
+?>
+
 <nav class="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
     <div class="container-xxl">
         <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-4">
@@ -66,29 +96,14 @@
                         </li>
                     </ul>
                 </li>
+
                 <!-- Notification -->
-                <!-- Notification Dropdown -->
                 <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
                     <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
                         data-bs-auto-close="outside" aria-expanded="false">
                         <i class="bx bx-bell bx-sm"></i>
                         <span id="notification-count" class="badge bg-danger rounded-pill badge-notifications">
-                            <?php
-            session_start();
-            require_once '../../config/dbconn.php';
-
-            // Fetch notification count for the current user
-            $userId = $_SESSION['userid'];
-            $sql = "SELECT COUNT(*) AS notification_count
-                    FROM tblrequests
-                    WHERE user_id = :userId AND status = 'approved'";
-            $stmt = $dbh->prepare($sql);
-            $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-            $notificationCount = $stmt->fetch(PDO::FETCH_ASSOC)['notification_count'];
-
-            echo $notificationCount;
-            ?>
+                            <?php echo $notificationCount; ?>
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end py-0">
@@ -122,21 +137,20 @@
                 </li>
                 <!-- /Notification -->
 
-
                 <!-- User Profile Dropdown -->
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                     <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                         <div class="d-flex">
                             <div class="flex-shrink-0">
                                 <div class="avatar avatar-online">
-                                    <img src="<?php echo (!empty(htmlentities($user['Profile']))) ? $user['Profile'] : '../../assets/img/avatars/no-image.jpg'; ?>"
+                                    <img src="<?php echo (!empty($user['Profile'])) ? htmlentities($user['Profile']) : '../../assets/img/avatars/no-image.jpg'; ?>"
                                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                 </div>
                             </div>
                             <div class="flex-grow-1 mx-2 d-none d-md-block">
                                 <span
-                                    class="fw-medium d-block"><?php echo $user['Honorific']." ".$user['FirstName']." ".$user['LastName']; ?></span>
-                                <small class="text-muted"><?php echo $_SESSION['role']; ?></small>
+                                    class="fw-medium d-block"><?php echo htmlentities($user['Honorific'])." ".htmlentities($user['FirstName'])." ".htmlentities($user['LastName']); ?></span>
+                                <small class="text-muted"><?php echo htmlentities($user['RoleName']); ?></small>
                             </div>
                         </div>
                     </a>
@@ -146,14 +160,14 @@
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar avatar-online">
-                                            <img src="<?php echo (!empty(htmlentities($user['Profile']))) ? $user['Profile'] : '../../assets/img/avatars/no-image.jpg'; ?>"
+                                            <img src="<?php echo (!empty($user['Profile'])) ? htmlentities($user['Profile']) : '../../assets/img/avatars/no-image.jpg'; ?>"
                                                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
                                         <span
-                                            class="fw-medium d-block"><?php echo $user['Honorific']." ".$user['FirstName']." ".$user['LastName']; ?></span>
-                                        <small class="text-muted"><?php echo $_SESSION['role']; ?></small>
+                                            class="fw-medium d-block"><?php echo htmlentities($user['Honorific'])." ".htmlentities($user['FirstName'])." ".htmlentities($user['LastName']); ?></span>
+                                        <small class="text-muted"><?php echo htmlentities($user['RoleName']); ?></small>
                                     </div>
                                 </div>
                             </a>

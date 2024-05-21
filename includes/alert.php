@@ -1,4 +1,7 @@
 <?php
+$msg = ""; // Define $msg variable
+$error = ""; // Define $error variable
+
 if ($msg) { ?>
 <div class="bs-toast toast toast-ex animate__animated my-2 fade bg-success animate__bounceInRight show" role="alert"
     aria-live="assertive" aria-atomic="true" data-bs-delay="1000">
@@ -28,16 +31,18 @@ if ($error) { ?>
 </div>
 <?php } ?>
 <script>
-// setTimeout(function() {
-//   $('.toast').fadeTo("slow", 0.1, function() {
-//     $('.toast').alert('close')
-//   });
-// }, 4000)
 setTimeout(function() {
     $('.toast').addClass(
         'bs-toast toast toast-ex animate__animated animate__slideOutRight'
     ); // Add the "fading-up" class to trigger animation
 }, 3000);
+
+// Auto dismiss after a certain duration
+setTimeout(function() {
+    $('.toast').fadeTo("slow", 0.1, function() {
+        $('.toast').alert('close')
+    });
+}, 5000); // Adjust timing as needed
 
 if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);

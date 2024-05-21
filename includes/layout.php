@@ -1,8 +1,15 @@
 <?php
-session_start();
-//error_reporting(0);
 include('../../config/dbconn.php');
-include('login_check.php');
+
+// Redirect to index page if the user is not authenticated
+if (!isset($_SESSION['userid'])) {
+    header('Location: ../../index.php');
+    exit();
+}
+
+// Determine if the current user is a superadmin
+$isSupperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin';
+
 ?>
 
 <!DOCTYPE html>
@@ -10,10 +17,8 @@ include('login_check.php');
     data-assets-path="../../assets/" data-template="horizontal-menu-template">
 
 <head>
-    <title><?php echo $pageTitle ?></title>
-    <?php
-  include('header.php');
-  ?>
+    <title><?php echo isset($pageTitle) ? $pageTitle : 'Dashboard'; ?></title>
+    <?php include('header.php'); ?>
     <script src="https://cdn.ckeditor.com/ckeditor5/33.0.0/classic/ckeditor.js"></script>
 </head>
 <?php include('alert.php'); ?>
@@ -25,13 +30,12 @@ include('login_check.php');
         <div class="layout-container">
             <!-- Navbar -->
             <?php
-      if ($isSupperAdmin) {
-     // if ($isSupperAdmin = $admin && $admin['role'] === 'supperadmin') {
-        include('nav_admin.php');
-      } else {
-        include('navbar.php');
-      }
-      ?>
+            if ($isSupperAdmin) {
+                include('nav_admin.php');
+            } else {
+                include('navbar.php');
+            }
+            ?>
             <!-- / Navbar -->
             <!-- Layout container -->
             <div class="layout-page">
@@ -39,12 +43,12 @@ include('login_check.php');
                 <div class="content-wrapper">
                     <!-- Menu -->
                     <?php
-          if ($isSupperAdmin) {
-            include('sidebar_admin.php');
-          } else {
-            include('sidebar.php');
-          }
-          ?>
+                    if ($isSupperAdmin) {
+                        include('sidebar_admin.php');
+                    } else {
+                        include('sidebar.php');
+                    }
+                    ?>
                     <!-- / Menu -->
                     <!-- Content -->
                     <div class="container-xxl flex-grow-1 container-p-y">

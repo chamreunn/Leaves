@@ -35,36 +35,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           // Set session variables for user
           $_SESSION['userid'] = $user['id'];
           $_SESSION['role'] = $user['RoleName'];
+          $_SESSION['username'] = $user['UserName']; // Optional: Add more session variables if needed
           if ($_SESSION['role'] == 'ប្រធានអង្គភាព') {
-            // Redirect to user dashboard
-            $_SESSION['userid'] = $user['id'];
-            $_SESSION['role'] = $user['RoleName'];
-            sleep(1);
+            // Redirect to admin dashboard
             header('Location: pages/admin/dashboard.php');
           } else {
-            $_SESSION['userid'] = $user['id'];
-            $_SESSION['role'] = $user['RoleName'];
             // Redirect to user dashboard
-            sleep(1);
             header('Location: pages/user/dashboard.php');
-            exit();
           }
+          exit();
         } elseif ($admin && $admin['Password'] == md5($password)) {
           // Set session variables for admin
           $_SESSION['userid'] = $admin['id'];
           $_SESSION['role'] = $admin['role'];
-
-          // Redirect to admin dashboard
-          sleep(1);
+          $_SESSION['username'] = $admin['UserName']; // Optional: Add more session variables if needed
+          // Redirect to superadmin dashboard
           header('Location: pages/supperadmin/dashboard.php');
           exit();
         } else {
-          sleep(1);
           $error = 'Invalid username or password';
         }
       } catch (PDOException $e) {
         // Handle database errors
-        sleep(1);
         $error = "Database error: " . $e->getMessage();
       }
     } else {
