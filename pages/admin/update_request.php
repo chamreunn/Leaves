@@ -1,7 +1,12 @@
 <?php
 session_start();
-require_once '../../config/dbconn.php';
+include('../../config/dbconn.php');
 
+// Redirect to index page if the user is not authenticated
+if (!isset($_SESSION['userid'])) {
+    header('Location: ../../index.php');
+    exit();
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   if (isset($_POST['id'], $_POST['action'], $_POST['confirm']) && $_POST['confirm'] === 'yes') {
     $requestId = $_POST['id'];

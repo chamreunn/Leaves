@@ -1,4 +1,13 @@
 <?php
+session_start();
+include('../../config/dbconn.php');
+
+// Redirect to index page if the user is not authenticated
+if (!isset($_SESSION['userid'])) {
+    header('Location: ../../index.php');
+    exit();
+}
+
 $pageTitle = "របាយការណ៍សវនកម្ម";
 $sidebar = "audit";
 ob_start(); // Start output buffering
