@@ -1,8 +1,5 @@
 <?php
-$msg = ""; // Define $msg variable
-$error = ""; // Define $error variable
-
-if ($msg) { ?>
+if (isset($msg)) { ?>
 <div class="bs-toast toast toast-ex animate__animated my-2 fade bg-success animate__bounceInRight show" role="alert"
     aria-live="assertive" aria-atomic="true" data-bs-delay="1000">
     <div class="toast-header">
@@ -14,8 +11,7 @@ if ($msg) { ?>
         <?php echo $msg; ?>
     </div>
 </div>
-<?php }
-if ($error) { ?>
+<?php } elseif (isset ($error)) { ?>
 <div class="d-flex align-items-center justify-content-center">
     <div class="bs-toast toast toast-ex animate__animated my-2 fade bg-danger animate__bounceInRight show" role="alert"
         aria-live="assertive" aria-atomic="true" data-bs-delay="1000">

@@ -1,69 +1,11 @@
 <?php
-session_start();
-error_reporting(0);
-include('config/dbconn.php');
+include('../../config/dbconn.php');
 
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $loginType = $_POST['login_type'];
 
-  if ($loginType == 'login') {
-    // Handle login
-    // Check if the username and password are provided and not empty
-    if (!empty($_POST["username"]) && !empty($_POST["password"])) {
-      $username = $_POST["username"];
-      $password = $_POST["password"];
-
-      try {
-        // Check against tbluser table
-        $query = "SELECT u.*, r.RoleName FROM tbluser u
-                      INNER JOIN tblrole r ON u.RoleId = r.id
-                      WHERE u.UserName = :username";
-        $stmt = $dbh->prepare($query);
-        $stmt->bindParam(':username', $username);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Check against admin table
-        $query = "SELECT * FROM admin WHERE UserName = :username";
-        $stmt = $dbh->prepare($query);
-        $stmt->bindParam(':username', $username);
-        $stmt->execute();
-        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user && $user['Password'] == md5($password)) {
-          // Set session variables for user
-          $_SESSION['userid'] = $user['id'];
-          $_SESSION['role'] = $user['RoleName'];
-          $_SESSION['username'] = $user['UserName']; // Optional: Add more session variables if needed
-          if ($_SESSION['role'] == 'ប្រធានអង្គភាព') {
-            // Redirect to admin dashboard
-            header('Location: pages/admin/dashboard.php');
-          } else {
-            // Redirect to user dashboard
-            header('Location: pages/user/dashboard.php');
-          }
-          exit();
-        } elseif ($admin && $admin['Password'] == md5($password)) {
-          // Set session variables for admin
-          $_SESSION['userid'] = $admin['id'];
-          $_SESSION['role'] = $admin['role'];
-          $_SESSION['username'] = $admin['UserName']; // Optional: Add more session variables if needed
-          // Redirect to superadmin dashboard
-          header('Location: pages/supperadmin/dashboard.php');
-          exit();
-        } else {
-          $error = 'Invalid username or password';
-        }
-      } catch (PDOException $e) {
-        // Handle database errors
-        $error = "Database error: " . $e->getMessage();
-      }
-    } else {
-      sleep(1);
-      $error = 'Please enter both username and password';
-    }
-  } elseif ($loginType == 'setting-system') {
+  if ($loginType == 'setting-system') {
     // Handle system settings
     try {
       // Retrieve form data

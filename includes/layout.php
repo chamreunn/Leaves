@@ -1,6 +1,6 @@
 <?php
+// session_start(); // Start the session at the beginning
 include('../../config/dbconn.php');
-
 // Redirect to index page if the user is not authenticated
 if (!isset($_SESSION['userid'])) {
     header('Location: ../../index.php');
@@ -33,7 +33,7 @@ $isSupperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin'
             if ($isSupperAdmin) {
                 include('nav_admin.php');
             } else {
-                include('navbar.php');
+                include('nav_admin.php');
             }
             ?>
             <!-- / Navbar -->
@@ -41,7 +41,7 @@ $isSupperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin'
             <div class="layout-page">
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
-                    <!-- Menu -->
+                    Menu
                     <?php
                     if ($isSupperAdmin) {
                         include('sidebar_admin.php');

@@ -1,5 +1,4 @@
 <?php
-// Start session and check authentication
 session_start();
 include('../../config/dbconn.php');
 

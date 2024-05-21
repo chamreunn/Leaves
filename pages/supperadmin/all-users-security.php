@@ -1,4 +1,12 @@
 <?php
+session_start();
+include('../../config/dbconn.php');
+
+// Redirect to index page if the user is not authenticated
+if (!isset($_SESSION['userid'])) {
+    header('Location: ../../index.php');
+    exit();
+}
 
 declare(strict_types=1);
 require '../../vendor/autoload.php';
@@ -11,8 +19,6 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
 $pageTitle = "ព័ត៌មានគណនី";
 $sidebar = "all-users-security";
 ob_start(); // Start output buffering
-
-include('../../config/dbconn.php');
 include('../../controllers/form_process.php');
 
 // Retrieve user information from the database based on the provided user ID

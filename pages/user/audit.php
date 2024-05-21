@@ -1,10 +1,18 @@
 <?php
+session_start();
+include('../../config/dbconn.php');
+
+// Redirect to index page if the user is not authenticated
+if (!isset($_SESSION['userid'])) {
+    header('Location: ../../index.php');
+    exit();
+}
+
 $pageTitle = "របាយការណ៍សវនកម្ម";
 $sidebar = "audit";
 ob_start(); // Start output buffering
-include('../../config/dbconn.php');
-include('../../includes/login_check.php');
 include('../../controllers/form_process.php');
+
 $stmt = $dbh->query('SELECT id, RegulatorName FROM tblregulator');
 $regulators = $stmt->fetchAll();
 
@@ -32,11 +40,6 @@ if ($admindepartment) {
 } else {
   echo "No Head of Unit found for this user.";
 }
-
-session_start();
-
-// Include database connection
-require_once '../../config/dbconn.php';
 
 // Fetch notifications for the current user
 $userId = $_SESSION['userid'];
@@ -182,9 +185,6 @@ $rejectedCount = $stmtRejectedCount->fetch(PDO::FETCH_ASSOC)['rejected_count'];
     </div>
 
     <?php
-  session_start();
-  require_once '../../config/dbconn.php';
-
   $userId = $_SESSION['userid'];
 
   $sql = "SELECT tblrequests.*, tbluser.Firstname, tbluser.Lastname, tbluser.Email, tbluser.Profile
@@ -541,9 +541,5 @@ $rejectedCount = $stmtRejectedCount->fetch(PDO::FETCH_ASSOC)['rejected_count'];
         </div>
     </div>
 </div> -->
-
-
 <?php $content = ob_get_clean(); ?>
-
-
 <?php include('../../includes/layout.php'); ?>

@@ -1,31 +1,91 @@
 <?php
 session_start();
-error_reporting(0);
-//ini_set('display_errors', 1);
-
 include('config/dbconn.php');
-include('controllers/form_process.php');
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $loginType = $_POST['login_type'];
+  if ($loginType == 'login') {
+    // Handle login
+    // Check if the username and password are provided and not empty
+    if (!empty($_POST["username"]) && !empty($_POST["password"])) {
+      $username = $_POST["username"];
+      $password = $_POST["password"];
+
+      try {
+        // Check against tbluser table
+        $query = "SELECT u.*, r.RoleName FROM tbluser u
+                    INNER JOIN tblrole r ON u.RoleId = r.id
+                    WHERE u.UserName = :username";
+        $stmt = $dbh->prepare($query);
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Check against admin table
+        $query = "SELECT * FROM admin WHERE UserName = :username";
+        $stmt = $dbh->prepare($query);
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && $user['Password'] == md5($password)) {
+          // Set session variables for user
+          $_SESSION['userid'] = $user['id'];
+          $_SESSION['role'] = $user['RoleName'];
+          $_SESSION['username'] = $user['UserName']; // Optional: Add more session variables if needed
+          if ($_SESSION['role'] == 'ប្រធានអង្គភាព') {
+            // Redirect to admin dashboard
+            header('Location: pages/admin/dashboard.php');
+          } else {
+            // Redirect to user dashboard
+            header('Location: pages/user/dashboard.php');
+          }
+          exit();
+        } elseif ($admin && $admin['Password'] == md5($password)) {
+          // Set session variables for admin
+          $_SESSION['userid'] = $admin['id'];
+          $_SESSION['role'] = $admin['role'];
+          $_SESSION['username'] = $admin['UserName']; // Optional: Add more session variables if needed
+          // Redirect to superadmin dashboard
+          header('Location: pages/supperadmin/dashboard.php');
+          exit();
+        } else {
+          $error = 'Invalid username or password';
+        }
+      } catch (PDOException $e) {
+        // Handle database errors
+        $error = "Database error: " . $e->getMessage();
+      }
+    } else {
+      sleep(1);
+      $error = 'Please enter both username and password';
+    }
+  } else {
+    $error = "Invalid login type.";
+  }
+}
+
 try {
   // Retrieve existing data if available
   $sql = "SELECT * FROM tblsystemsettings";
   $result = $dbh->query($sql);
 
   if ($result->rowCount() > 0) {
-      // Fetch data and pre-fill the form fields
-      $row = $result->fetch(PDO::FETCH_ASSOC);
-      $system_name = $row["system_name"];
-      // Assuming icon and cover paths are stored in the database with ../../
-      $icon_path_relative = $row["icon_path"];
-      $cover_path_relative = $row["cover_path"];
+    // Fetch data and pre-fill the form fields
+    $row = $result->fetch(PDO::FETCH_ASSOC);
+    $system_name = $row["system_name"];
+    // Assuming icon and cover paths are stored in the database with ../../
+    $icon_path_relative = $row["icon_path"];
+    $cover_path_relative = $row["cover_path"];
 
-      // Remove ../../ from the paths
-      $icon_path = str_replace('../../', '', $icon_path_relative);
-      $cover_path = str_replace('../../', '', $cover_path_relative);
+    // Remove ../../ from the paths
+    $icon_path = str_replace('../../', '', $icon_path_relative);
+    $cover_path = str_replace('../../', '', $cover_path_relative);
   } else {
-      // If no data available, set default values
-      $system_name = "";
-      $icon_path = "assets/img/avatars/no-image.jpg";
-      $cover_path = "assets/img/pages/profile-banner.png";
+    // If no data available, set default values
+    $system_name = "";
+    $icon_path = "assets/img/avatars/no-image.jpg";
+    $cover_path = "assets/img/pages/profile-banner.png";
   }
 } catch (PDOException $e) {
   echo "Connection failed: " . $e->getMessage();

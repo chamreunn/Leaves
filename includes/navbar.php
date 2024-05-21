@@ -199,7 +199,6 @@ $notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_c
                     </ul>
                 </li>
                 <!-- /User Profile Dropdown -->
-
             </ul>
         </div>
     </div>
