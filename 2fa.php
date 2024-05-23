@@ -4,8 +4,8 @@ require 'vendor/autoload.php';
 include('config/dbconn.php');
 
 if (!isset($_SESSION['temp_userid'])) {
-    header('Location: index.php');
-    exit();
+  header('Location: index.php');
+  exit();
 }
 
 $error = '';
@@ -13,89 +13,99 @@ $max_attempts = 5;
 $remaining_attempts = $max_attempts;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!isset($_SESSION['2fa_attempts'])) {
-        $_SESSION['2fa_attempts'] = 0;
+  if (!isset($_SESSION['2fa_attempts'])) {
+    $_SESSION['2fa_attempts'] = 0;
+  }
+
+  $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
+
+  // Combine all OTP inputs into a single code
+  $userCode = implode('', [
+    $_POST['digit1'],
+    $_POST['digit2'],
+    $_POST['digit3'],
+    $_POST['digit4'],
+    $_POST['digit5'],
+    $_POST['digit6']
+  ]);
+
+  $secret = $_SESSION['temp_secret'];
+
+  if ($g->checkCode($secret, $userCode)) {
+    // Authenticator code is correct, complete the login
+    $_SESSION['userid'] = $_SESSION['temp_userid'];
+    $_SESSION['username'] = $_SESSION['temp_username'];
+    $_SESSION['role'] = $_SESSION['temp_role'];
+
+    // Clear the temporary session variables
+    // Unset session variables
+    unset($_SESSION['temp_userid'], $_SESSION['temp_username'], $_SESSION['temp_role'], $_SESSION['temp_usertype'], $_SESSION['temp_secret'], $_SESSION['2fa_attempts']);
+
+    // Check if $_SESSION['role'] and $_SESSION['temp_usertype'] are set before accessing them
+    if (isset($_SESSION['role'])) {
+      if ($_SESSION['role'] == 'ប្រធានអង្គភាព') {
+        header('Location: pages/admin/dashboard.php');
+        exit(); // Terminate script execution after redirection
+      }
     }
 
-    $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
+    if (isset($_SESSION['temp_usertype'])) {
+      if ($_SESSION['temp_usertype'] == 'supperadmin') {
+        header('Location: pages/supperadmin/dashboard.php');
+        exit(); // Terminate script execution after redirection
+      }
+    }
 
-    // Combine all OTP inputs into a single code
-    $userCode = implode('', [
-        $_POST['digit1'],
-        $_POST['digit2'],
-        $_POST['digit3'],
-        $_POST['digit4'],
-        $_POST['digit5'],
-        $_POST['digit6']
-    ]);
+    // If none of the conditions above are met, redirect to the user dashboard
+    header('Location: pages/user/dashboard.php');
+    exit(); // Terminate script execution after redirection
+  } else {
+    $_SESSION['2fa_attempts']++;
+    $remaining_attempts = $max_attempts - $_SESSION['2fa_attempts'];
 
-    $secret = $_SESSION['temp_secret'];
-
-    if ($g->checkCode($secret, $userCode)) {
-        // Authenticator code is correct, complete the login
-        $_SESSION['userid'] = $_SESSION['temp_userid'];
-        $_SESSION['username'] = $_SESSION['temp_username'];
-        $_SESSION['role'] = $_SESSION['temp_role'];
-
-        // Clear the temporary session variables
-        unset($_SESSION['temp_userid'], $_SESSION['temp_username'], $_SESSION['temp_role'], $_SESSION['temp_usertype'], $_SESSION['temp_secret'], $_SESSION['2fa_attempts']);
-
-        // Redirect to appropriate dashboard
-        if ($_SESSION['role'] == 'ប្រធានអង្គភាព') {
-            header('Location: pages/admin/dashboard.php');
-        } elseif ($_SESSION['temp_usertype'] == 'admin') {
-            header('Location: pages/supperadmin/dashboard.php');
-        } else {
-            header('Location: pages/user/dashboard.php');
-        }
-        exit();
+    if ($remaining_attempts > 0) {
+      $error = "លេខកូដមិនត្រឹមត្រូវ សូមព្យាយាមម្តងទៀត! You have $remaining_attempts attempts remaining.";
     } else {
-        $_SESSION['2fa_attempts']++;
-        $remaining_attempts = $max_attempts - $_SESSION['2fa_attempts'];
+      // Lock the user's account
+      $userId = $_SESSION['temp_userid'];
+      $updateQuery = "UPDATE tbluser SET Status = 'locked' WHERE id = :userid";
+      $stmt = $dbh->prepare($updateQuery);
+      $stmt->bindParam(':userid', $userId);
+      $stmt->execute();
 
-        if ($remaining_attempts > 0) {
-            $error = "លេខកូដមិនត្រឹមត្រូវ សូមព្យាយាមម្តងទៀត! You have $remaining_attempts attempts remaining.";
-        } else {
-            // Lock the user's account
-            $userId = $_SESSION['temp_userid'];
-            $updateQuery = "UPDATE tbluser SET Status = 'locked' WHERE id = :userid";
-            $stmt = $dbh->prepare($updateQuery);
-            $stmt->bindParam(':userid', $userId);
-            $stmt->execute();
+      // Clear the temporary session variables
+      unset($_SESSION['temp_userid'], $_SESSION['temp_username'], $_SESSION['temp_role'], $_SESSION['temp_usertype'], $_SESSION['temp_secret'], $_SESSION['2fa_attempts']);
 
-            // Clear the temporary session variables
-            unset($_SESSION['temp_userid'], $_SESSION['temp_username'], $_SESSION['temp_role'], $_SESSION['temp_usertype'], $_SESSION['temp_secret'], $_SESSION['2fa_attempts']);
-
-            header('Location: account-locked.php');
-            exit();
-        }
+      header('Location: account-locked.php');
+      exit();
     }
+  }
 }
 
 try {
-    // Retrieve existing data if available
-    $sql = "SELECT * FROM tblsystemsettings";
-    $result = $dbh->query($sql);
+  // Retrieve existing data if available
+  $sql = "SELECT * FROM tblsystemsettings";
+  $result = $dbh->query($sql);
 
-    if ($result->rowCount() > 0) {
-        // Fetch data and pre-fill the form fields
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $system_name = $row["system_name"];
-        // Assuming icon and cover paths are stored in the database with ../../
-        $icon_path_relative = $row["icon_path"];
-        $cover_path_relative = $row["cover_path"];
+  if ($result->rowCount() > 0) {
+    // Fetch data and pre-fill the form fields
+    $row = $result->fetch(PDO::FETCH_ASSOC);
+    $system_name = $row["system_name"];
+    // Assuming icon and cover paths are stored in the database with ../../
+    $icon_path_relative = $row["icon_path"];
+    $cover_path_relative = $row["cover_path"];
 
-        // Remove ../../ from the paths
-        $icon_path = str_replace('../../', '', $icon_path_relative);
-        $cover_path = str_replace('../../', '', $cover_path_relative);
-    } else {
-        // If no data available, set default values
-        $system_name = "";
-        $icon_path = "assets/img/avatars/no-image.jpg";
-        $cover_path = "assets/img/pages/profile-banner.png";
-    }
+    // Remove ../../ from the paths
+    $icon_path = str_replace('../../', '', $icon_path_relative);
+    $cover_path = str_replace('../../', '', $cover_path_relative);
+  } else {
+    // If no data available, set default values
+    $system_name = "";
+    $icon_path = "assets/img/avatars/no-image.jpg";
+    $cover_path = "assets/img/pages/profile-banner.png";
+  }
 } catch (PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
+  echo "Connection failed: " . $e->getMessage();
 }
 ?>
 
@@ -248,7 +258,7 @@ try {
                                     class="form-control auth-input border-2 h-px-50 text-center numeral-mask mx-1 my-2"
                                     maxlength="1" name="digit6" required>
                             </div>
-                            <?php if ($error): ?>
+                            <?php if ($error) : ?>
                             <div class="text-danger"><?php echo $error; ?></div>
                             <?php endif; ?>
                         </div>
