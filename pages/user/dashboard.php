@@ -5,8 +5,8 @@ include('../../config/dbconn.php');
 
 // Redirect to index page if the user is not authenticated
 if (!isset($_SESSION['userid'])) {
-    header('Location: ../../index.php');
-    exit();
+  header('Location: ../../index.php');
+  exit();
 }
 
 // Set page-specific variables
@@ -22,60 +22,60 @@ $leaveRejected = 2; // Replace with a query to fetch the actual number of leaves
 $leaveThisWeek = 3; // Replace with a query to fetch the actual number of leaves this week
 // Start output buffering
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $reportTitle = $_POST['report_title'];
-    $reportDataStep1 = $_POST['report_data_step1'];
-    $step = $_POST['step'];
-    $userId = $_SESSION['userid'];
+  $reportTitle = $_POST['report_title'];
+  $reportDataStep1 = $_POST['report_data_step1'];
+  $step = $_POST['step'];
+  $userId = $_SESSION['userid'];
 
-    // Validate form data
-    $errors = [];
-    if (empty($reportTitle)) {
-        $errors[] = "Report title is required";
-    }
+  // Validate form data
+  $errors = [];
+  if (empty($reportTitle)) {
+    $errors[] = "Report title is required";
+  }
 
-    if (empty($reportDataStep1)) {
-        $errors[] = "Report data is required";
-    }
+  if (empty($reportDataStep1)) {
+    $errors[] = "Report data is required";
+  }
 
-    // Check if there are no errors before inserting into the database
-    if (empty($errors)) {
-        // File upload handling
-        $targetDir = "../../uploads/tblreports/";
-        $attachmentStep1 = $_FILES['attachment_step1']['name'];
-        $targetFilePath = $targetDir . basename($attachmentStep1);
-        $fileType = pathinfo($targetFilePath, PATHINFO_EXTENSION);
+  // Check if there are no errors before inserting into the database
+  if (empty($errors)) {
+    // File upload handling
+    $targetDir = "../../uploads/tblreports/";
+    $attachmentStep1 = $_FILES['attachment_step1']['name'];
+    $targetFilePath = $targetDir . basename($attachmentStep1);
+    $fileType = pathinfo($targetFilePath, PATHINFO_EXTENSION);
 
-        // Allow certain file formats
-        $allowedTypes = array('pdf', 'doc', 'docx');
-        if (!in_array($fileType, $allowedTypes)) {
-            $errors[] = "Only PDF, DOC, DOCX files are allowed.";
-        } else {
-            // Upload file to server
-            if (move_uploaded_file($_FILES["attachment_step1"]["tmp_name"], $targetFilePath)) {
-                // Insert report data into database based on step
-                if ($step == 1) {
-                    $stmt = $dbh->prepare("INSERT INTO tblreports (user_id, report_title, Description, attachment_step1) VALUES (?, ?, ?, ?)");
-                    $stmt->execute([$userId, $reportTitle, $reportDataStep1, $targetFilePath]);
-                } elseif ($step == 2) {
-                    $stmt = $dbh->prepare("UPDATE tblreports SET step2_approved = 0, Description2 = ?, attachment_step2 = ? WHERE user_id = ? AND step2_approved = 0");
-                    $stmt->execute([$reportDataStep1, $targetFilePath, $userId]);
-                } elseif ($step == 3) {
-                    $stmt = $dbh->prepare("UPDATE tblreports SET step3_approved = 0, Description3 = ?, attachment_step3 = ? WHERE user_id = ? AND step3_approved = 0");
-                    $stmt->execute([$reportDataStep1, $targetFilePath, $userId]);
-                }
-
-                // Check if the query was successful
-                if ($stmt->rowCount() > 0) {
-                    // Success message or redirect
-                    $msg = "Report submitted successfully.";
-                } else {
-                    $errors[] = "Failed to submit the report. Please try again.";
-                }
-            } else {
-                $errors[] = "There was an error uploading the file.";
-            }
+    // Allow certain file formats
+    $allowedTypes = array('pdf', 'doc', 'docx');
+    if (!in_array($fileType, $allowedTypes)) {
+      $errors[] = "Only PDF, DOC, DOCX files are allowed.";
+    } else {
+      // Upload file to server
+      if (move_uploaded_file($_FILES["attachment_step1"]["tmp_name"], $targetFilePath)) {
+        // Insert report data into database based on step
+        if ($step == 1) {
+          $stmt = $dbh->prepare("INSERT INTO tblreports (user_id, report_title, Description, attachment_step1) VALUES (?, ?, ?, ?)");
+          $stmt->execute([$userId, $reportTitle, $reportDataStep1, $targetFilePath]);
+        } elseif ($step == 2) {
+          $stmt = $dbh->prepare("UPDATE tblreports SET step2_approved = 0, Description2 = ?, attachment_step2 = ? WHERE user_id = ? AND step2_approved = 0");
+          $stmt->execute([$reportDataStep1, $targetFilePath, $userId]);
+        } elseif ($step == 3) {
+          $stmt = $dbh->prepare("UPDATE tblreports SET step3_approved = 0, Description3 = ?, attachment_step3 = ? WHERE user_id = ? AND step3_approved = 0");
+          $stmt->execute([$reportDataStep1, $targetFilePath, $userId]);
         }
+
+        // Check if the query was successful
+        if ($stmt->rowCount() > 0) {
+          // Success message or redirect
+          $msg = "Report submitted successfully.";
+        } else {
+          $errors[] = "Failed to submit the report. Please try again.";
+        }
+      } else {
+        $errors[] = "There was an error uploading the file.";
+      }
     }
+  }
 }
 
 try {
@@ -94,8 +94,8 @@ try {
 
   // Check if any data is fetched
   if (empty($approvedReports)) {
-      // No approved reports found
-      $message = "No approved reports found for the current user.";
+    // No approved reports found
+    $message = "No approved reports found for the current user.";
   }
 } catch (PDOException $e) {
   // Handle database connection error
@@ -164,8 +164,9 @@ ob_start();
             </div>
         </div>
     </div>
-
-    <div class="col-12">
+</div>
+<div class="row gy-4 gy-sm-1">
+    <div class="col-sm-12 col-lg-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
@@ -175,18 +176,17 @@ ob_start();
                         Create Report
                     </button>
                 </div>
+                <?php if (empty($approvedReports)) : ?>
+                <div class="d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <img src="../../assets/img/illustrations/empty-box.png" class="avatar avatar-xl mt-4" alt="">
+                        <h6 class="mt-4">No data available!</h6>
+                    </div>
+                </div>
+                <?php else : ?>
+                <?php foreach ($approvedReports as $approvedReport) : ?>
                 <div class="row">
                     <div class="col-12">
-                        <?php if (empty($approvedReports)) : ?>
-                        <div class="d-flex align-items-center justify-content-center">
-                            <div class="text-center">
-                                <img src="../../assets/img/illustrations/empty-box.png" class="avatar avatar-xl mt-4"
-                                    alt="">
-                                <h6 class="mt-4">No data available!</h6>
-                            </div>
-                        </div>
-                        <?php else : ?>
-                        <?php foreach ($approvedReports as $approvedReport) : ?>
                         <div class="border rounded-3 shadow-sm m-2" style="width: 18rem;">
                             <!-- User Avatar -->
                             <div class="d-flex align-items-center justify-content-center">
@@ -206,7 +206,8 @@ ob_start();
                                 </p>
 
                                 <!-- Report Title -->
-                                <h5 class="card-title"><?php echo htmlspecialchars($approvedReport['report_title']); ?>
+                                <h5 class="card-title">
+                                    <?php echo htmlspecialchars($approvedReport['report_title']); ?>
                                 </h5>
 
                                 <!-- Approval Status -->
@@ -296,14 +297,13 @@ ob_start();
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <?php endforeach; ?>
-                        <?php endif; ?>
                     </div>
                 </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-
 </div>
 <!-- Modal for creating a new report - Step 1 -->
 <div class="modal animate__animated animate__bounceIn" id="requeststep1" tabindex="-1"
@@ -373,6 +373,7 @@ ob_start();
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <!-- Modal Header -->
+
             <div class="modal-header">
                 <h5 class="modal-title mef2" id="createReportModalLabel">បង្កើតសំណើ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -397,6 +398,7 @@ ob_start();
         </div>
     </div>
 </div>
+
 
 
 

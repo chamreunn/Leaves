@@ -36,7 +36,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           if ($account['Status'] == 'locked') {
             sleep(1);
             header('Location: account-locked.php');
-            exit();
           } elseif (password_verify($password, $account['Password'])) {
             if ($account['authenticator_enabled'] == 1) {
               // Redirect to 2FA verification
@@ -47,7 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               $_SESSION['temp_secret'] = $account['TwoFASecret'];
               sleep(1);
               header('Location: 2fa.php');
-              exit();
             } else {
               // Set session variables for user or admin
               $_SESSION['userid'] = $account['id'];
@@ -72,7 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               } else {
                 header('Location: pages/user/dashboard.php');
               }
-              exit();
             }
           } else {
             $error = 'Invalid username or password';
