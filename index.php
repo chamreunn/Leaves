@@ -1,7 +1,7 @@
 <?php
+session_start();
 require 'vendor/autoload.php';
 
-session_start();
 include('config/dbconn.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             sleep(1);
             header('Location: account-locked.php');
           } elseif (password_verify($password, $account['Password'])) {
-            if ($account['authenticator_enabled'] == 1) {
+            if (isset($account['authenticator_enabled']) && $account['authenticator_enabled'] == 1) {
               // Redirect to 2FA verification
               $_SESSION['temp_userid'] = $account['id'];
               $_SESSION['temp_username'] = $account['UserName'];
@@ -46,6 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               $_SESSION['temp_secret'] = $account['TwoFASecret'];
               sleep(1);
               header('Location: 2fa.php');
+              exit; // Make sure to exit after redirection
             } else {
               // Set session variables for user or admin
               $_SESSION['userid'] = $account['id'];
