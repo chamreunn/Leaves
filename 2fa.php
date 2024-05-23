@@ -1,7 +1,6 @@
 <?php
-require 'vendor/autoload.php';
-
 session_start();
+require 'vendor/autoload.php';
 include('config/dbconn.php');
 
 if (!isset($_SESSION['temp_userid'])) {
