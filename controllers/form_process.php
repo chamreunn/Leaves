@@ -1,5 +1,5 @@
 <?php
-include('../../config/dbconn.php');
+// include('../config/dbconn.php');
 
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -171,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $contact = $_POST['contact'];
       $username = $_POST['username'];
       $email = $_POST['email'];
-      $password = md5($_POST['password']);
+      $password = $_POST['password']; // No hashing here
       $status = $_POST['status'];
       $dob = $_POST['dob'];
       $department = $_POST['department'];
@@ -185,10 +185,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       if ($_FILES['profile']['error'] == UPLOAD_ERR_OK) {
         $tmp_name = $_FILES["profile"]["tmp_name"];
         $name = basename($_FILES["profile"]["name"]);
-        $target_dir = "../../assets/img/avatars/";
+        $target_dir = __DIR__ . "../../assets/img/avatars/";
         $target_file = $target_dir . $name;
+        $relative_path = "../../assets/img/avatars/" . $name;
+
         if (move_uploaded_file($tmp_name, $target_file)) {
-          $profileImage = $target_file;
+          $profileImage = $relative_path;
         } else {
           $error = "Failed to upload profile image.";
         }
@@ -207,6 +209,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       if ($stmt_check_duplicate->rowCount() > 0) {
         $error = "User with the same username, email, firstname, lastname, or contact already exists.";
       } else {
+        // Hash the password
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
         // SQL query to insert data into tbluser
         $sql_insert_user = "INSERT INTO tbluser (Honorific, FirstName, LastName, Gender, Contact, UserName, Email, Password, Status, DateofBirth, Department, Office, RoleId, PermissionId, Address, Profile, CreationDate, UpdateAt)
                                 VALUES (:honorific, :firstname, :lastname, :gender, :contact, :username, :email, :password, :status, :dob, :department, :office, :role, :permissions, :address, :profileImage, NOW(), NOW())";
@@ -221,7 +226,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $query_insert_user->bindParam(':contact', $contact, PDO::PARAM_STR);
         $query_insert_user->bindParam(':username', $username, PDO::PARAM_STR);
         $query_insert_user->bindParam(':email', $email, PDO::PARAM_STR);
-        $query_insert_user->bindParam(':password', $password, PDO::PARAM_STR);
+        $query_insert_user->bindParam(':password', $hashedPassword, PDO::PARAM_STR); // Using hashed password
         $query_insert_user->bindParam(':status', $status, PDO::PARAM_INT);
         $query_insert_user->bindParam(':dob', $dob, PDO::PARAM_STR);
         $query_insert_user->bindParam(':department', $department, PDO::PARAM_STR);
@@ -554,16 +559,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   } elseif ($loginType == 'insert_report') {
     try {
       // Prepare the insert statement
-      $stmt = $dbh->prepare("UPDATE tblrequests SET headline = :headline, data = :data, status = :status WHERE id = :requestid");
+      $stmt = $dbh->prepare("UPDATE tblreports SET headline = :headline, report_data_step1 = :data WHERE id = :requestid");
 
       // Initialize arrays to store all headlines and data
       $allHeadlines = [];
       $allData = [];
 
       // Loop through form data and collect headlines and data
-      for ($index = 0; $index < count($_POST) / 2; $index++) {
-        $allHeadlines[] = $_POST['headline' . $index];
-        $allData[] = $_POST['formValidationTextarea' . $index];
+      foreach ($_POST as $key => $value) {
+        // Check if the key corresponds to a headline or textarea input
+        if (strpos($key, 'headline') !== false) {
+          $index = substr($key, strlen('headline'));
+          $allHeadlines[$index] = $value;
+        } elseif (strpos($key, 'formValidationTextarea') !== false) {
+          $index = substr($key, strlen('formValidationTextarea'));
+          $allData[$index] = $value;
+        }
       }
 
       // Combine all headlines and data into strings separated by a delimiter
@@ -571,22 +582,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $dataString = implode(',', $allData);
 
       // Get user ID (replace this with your user ID retrieval method)
-      $user_id = $_POST['userid'];
+      $user_id = $_SESSION['userid'];
       $requestid = $_POST['requestid'];
-      $status = 'proccessing';
+      $status = 'processing'; // Typo corrected from 'proccessing' to 'processing'
+
       // Bind parameters and execute the statement
       $stmt->bindParam(':headline', $headlineString);
       $stmt->bindParam(':data', $dataString);
-      $stmt->bindParam(':status', $status);
       $stmt->bindParam(':requestid', $requestid);
       $stmt->execute();
 
-      // // If insertion is successful, delete the corresponding row from tblrequest
-      // $deleteStmt = $dbh->prepare("DELETE FROM tblrequests WHERE id = :requestid");
-      // $deleteStmt->bindParam(':requestid', $requestid);
-      // $deleteStmt->execute();
-
+      // Set success message
       $msg = "success";
+      sleep(1);
+      header('Location: dashboard.php');
     } catch (PDOException $e) {
       // Handle database errors
       echo "Error: " . $e->getMessage();
@@ -598,7 +607,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
       // Prepare the update statement
-      $stmt = $dbh->prepare("UPDATE tblrequest SET data = :data WHERE id = :id");
+      $stmt = $dbh->prepare("UPDATE tblreports SET report_data_step1 = :data WHERE id = :id");
 
       // Bind parameters
       $stmt->bindValue(':data', implode(',', $updatedData), PDO::PARAM_STR);
@@ -717,6 +726,102 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       // Rollback transaction on error
       $dbh->rollBack();
       $error = 'Error: ' . $e->getMessage();
+    }
+  } elseif ($loginType == 'report1') {
+    $userId = $_POST['userid'];
+    $reportTitle = htmlspecialchars($_POST['report_title']);
+    $reportData = htmlspecialchars($_POST['report_data']);
+    $targetDir = "../uploads/tblreports/"; // Adjust the path as per your file structure
+    $targetFile = $targetDir . basename($_FILES["attachment"]["name"]);
+    $uploadOk = 1;
+    $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+    // Check if file is a valid image or PDF
+    if ($fileType != "jpg" && $fileType != "jpeg" && $fileType != "png" && $fileType != "pdf") {
+      $error = "Sorry, only JPG, JPEG, PNG, and PDF files are allowed.";
+      $uploadOk = 0;
+    }
+
+    // Check file size
+    if ($_FILES["attachment"]["size"] > 5000000) {
+      $error = "Sorry, your file is too large.";
+      $uploadOk = 0;
+    }
+
+    if ($uploadOk && move_uploaded_file($_FILES["attachment"]["tmp_name"], $targetFile)) {
+      $stmt = $dbh->prepare("INSERT INTO tblreports (user_id, report_title, report_data_step1, attachment_step1) VALUES (:userId, :reportTitle, :reportData, :attachment)");
+      $stmt->bindParam(':userId', $userId);
+      $stmt->bindParam(':reportTitle', $reportTitle);
+      $stmt->bindParam(':reportData', $reportData);
+      $stmt->bindParam(':attachment', $targetFile);
+
+      if ($stmt->execute()) {
+        $msg = "Report submitted successfully.";
+      } else {
+        $error = "Error submitting report.";
+      }
+    } else {
+      $error = "Sorry, there was an error uploading your file.";
+    }
+  } elseif ($loginType == 'createreport2') {
+    $reportId = $_POST['reportid'];
+    $updatedData = $_POST['updatedData'];
+    $headline = $_POST['headline'];
+
+    try {
+      // Prepare the update statement
+      $stmt = $dbh->prepare("UPDATE tblreports SET report_data_step2 = :data, headline =:headline WHERE id = :id");
+
+      // Bind parameters
+      $stmt->bindValue(':data', implode(',', $updatedData), PDO::PARAM_STR);
+      $stmt->bindValue(':headline', implode(',', $headline), PDO::PARAM_STR);
+      $stmt->bindParam(':id', $reportId, PDO::PARAM_INT);
+
+      // Execute the statement
+      if ($stmt->execute()) {
+        $msg = 'success';
+        sleep(1);
+        header('Location: dashboard.php');
+      } else {
+        // Log execution failure
+        error_log("Error executing SQL query: " . implode(' ', $stmt->errorInfo()));
+        $error = "Failed to execute SQL query";
+      }
+    } catch (PDOException $e) {
+      // Handle database errors
+      error_log("Database error: " . $e->getMessage());
+      $error = "Database error: " . $e->getMessage();
+    }
+  } elseif ($loginType == 'createreport3') {
+    $reportId = $_POST['reportid'];
+    $updatedData = $_POST['updatedData'];
+    $headline = $_POST['headline'];
+    $completed = '1';
+
+    try {
+      // Prepare the update statement
+      $stmt = $dbh->prepare("UPDATE tblreports SET report_data_step3 = :data, headline =:headline, completed =:completed WHERE id = :id");
+
+      // Bind parameters
+      $stmt->bindValue(':data', implode(',', $updatedData), PDO::PARAM_STR);
+      $stmt->bindValue(':headline', implode(',', $headline), PDO::PARAM_STR);
+      $stmt->bindParam(':completed', $completed, PDO::PARAM_INT);
+      $stmt->bindParam(':id', $reportId, PDO::PARAM_INT);
+
+      // Execute the statement
+      if ($stmt->execute()) {
+        $msg = 'success';
+        sleep(1);
+        header('Location: dashboard.php');
+      } else {
+        // Log execution failure
+        error_log("Error executing SQL query: " . implode(' ', $stmt->errorInfo()));
+        $error = "Failed to execute SQL query";
+      }
+    } catch (PDOException $e) {
+      // Handle database errors
+      error_log("Database error: " . $e->getMessage());
+      $error = "Database error: " . $e->getMessage();
     }
   } else {
     $error = "Invalid login type.";

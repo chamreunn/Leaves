@@ -1,6 +1,17 @@
 <?php
 if (isset($_SESSION['userid'])) {
+    include('../../config/dbconn.php');
+
+    $userId = $_SESSION['userid'];
+
+    // Fetch admin-specific data from the database
+    $sqlAdmin = "SELECT UserName, email, fullname, RoleName, status FROM admin WHERE id = :userId";
+    $stmtAdmin = $dbh->prepare($sqlAdmin);
+    $stmtAdmin->bindParam(':userId', $userId, PDO::PARAM_INT);
+    $stmtAdmin->execute();
+    $admin = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
 ?>
+
 <aside id="layout-menu" class="layout-menu-horizontal menu menu-horizontal container-fluid flex-grow-0 bg-menu-theme"
     data-bg-class="bg-menu-theme"
     style="touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
@@ -79,7 +90,7 @@ if (isset($_SESSION['userid'])) {
                         </a>
                     </li>
                     <li
-                        class="<?php if (in_array($sidebar, ['leavetype', 'eleavetype'])) { echo 'menu-item active'; } else { echo 'menu-item'; } ?>">
+                        class="<?php if (in_array($sidebar, ['leavetype', 'eleavetype'])) { echo 'menu-item active'; } else { echo 'menu-item';} ?>">
                         <a href="leave-type.php"
                             class="<?php if (in_array($sidebar, ['leavetype', 'eleavetype'])) { echo 'menu-link active'; } else { echo 'menu-link'; } ?>">
                             <i class="menu-icon tf-icons bx bx-calendar-edit"></i>

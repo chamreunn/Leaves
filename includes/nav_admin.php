@@ -9,16 +9,14 @@ if (!isset($_SESSION['userid'])) {
 
 $userId = $_SESSION['userid'];
 
-// Fetch user-specific data from the database
-$sqlUser = "SELECT u.*, r.RoleName FROM tbluser u
-            INNER JOIN tblrole r ON u.RoleId = r.id
-            WHERE u.id = :userId";
-$stmtUser = $dbh->prepare($sqlUser);
-$stmtUser->bindParam(':userId', $userId, PDO::PARAM_INT);
-$stmtUser->execute();
-$user = $stmtUser->fetch(PDO::FETCH_ASSOC);
+// Fetch admin-specific data from the database
+$sqlAdmin = "SELECT * FROM admin WHERE id = :userId";
+$stmtAdmin = $dbh->prepare($sqlAdmin);
+$stmtAdmin->bindParam(':userId', $userId, PDO::PARAM_INT);
+$stmtAdmin->execute();
+$admin = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
 
-// Fetch notification count for the current user
+// Fetch notification count for the current admin
 $sqlNotifications = "SELECT COUNT(*) AS notification_count
                      FROM tblrequests
                      WHERE user_id = :userId AND status = 'approved'";
@@ -91,8 +89,7 @@ $notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_c
                         </li>
                         <li>
                             <a class="dropdown-item" href="javascript:void(0);" data-theme="system">
-                                <span class="align-middle"><i class="bx bx-desktop me-2"></i>System</span>
-                            </a>
+                                <span class="align-middle"><i class="bx bx-desktop me-2"></i>System</span> </a>
                         </li>
                     </ul>
                 </li>
@@ -103,7 +100,7 @@ $notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_c
                         data-bs-auto-close="outside" aria-expanded="false">
                         <i class="bx bx-bell bx-sm"></i>
                         <span id="notification-count" class="badge bg-danger rounded-pill badge-notifications">
-                            <?php echo $notificationCount                            ?>
+                            <?php echo $notificationCount; ?>
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end py-0">
@@ -133,31 +130,29 @@ $notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_c
                             <a href="admin_notification.php" class="btn btn-primary text-uppercase w-100">View All
                                 Notifications</a>
                         </li>
-                        <!-- Settings Icon -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="settings.php" data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                data-bs-offset="0,1" title="Settings">
-                                <i class="bx bx-cog bx-sm"></i>
-                            </a>
-                        </li>
                     </ul>
                 </li>
                 <!-- /Notification -->
-
+                <!-- Settings Icon -->
+                <li class="nav-item">
+                    <a class="nav-link" href="settings.php" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        data-bs-offset="0,1" title="Settings">
+                        <i class="bx bx-cog bx-sm"></i>
+                    </a>
+                </li>
                 <!-- User Profile Dropdown -->
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                     <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                         <div class="d-flex">
                             <div class="flex-shrink-0">
                                 <div class="avatar avatar-online">
-                                    <img src="<?php echo (!empty($user['Profile'])) ? htmlentities($user['Profile']) : '../../assets/img/avatars/no-image.jpg'; ?>"
+                                    <img src="<?php echo (!empty($admin['Profile'])) ? htmlentities($admin['Profile']) : '../../assets/img/avatars/no-image.jpg'; ?>"
                                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                 </div>
                             </div>
                             <div class="flex-grow-1 mx-2 d-none d-md-block">
-                                <span
-                                    class="fw-medium d-block"><?php echo htmlentities($user['Honorific'])." ".htmlentities($user['FirstName'])." ".htmlentities($user['LastName']); ?></span>
-                                <small class="text-muted"><?php echo htmlentities($user['RoleName']); ?></small>
+                                <span class="fw-medium d-block"><?php echo htmlentities($admin['UserName']); ?></span>
+                                <small class="text-muted"><?php echo htmlentities($admin['fullname']); ?></small>
                             </div>
                         </div>
                     </a>
@@ -167,14 +162,15 @@ $notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_c
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar avatar-online">
-                                            <img src="<?php echo (!empty($user['Profile'])) ? htmlentities($user['Profile']) : '../../assets/img/avatars/no-image.jpg'; ?>"
+                                            <img src="<?php echo (!empty($admin['Profile'])) ? htmlentities($admin['Profile']) : '../../assets/img/avatars/no-image.jpg'; ?>"
                                                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
                                         <span
-                                            class="fw-medium d-block"><?php echo htmlentities($user['Honorific'])." ".htmlentities($user['FirstName'])." ".htmlentities($user['LastName']); ?></span>
-                                        <small class="text-muted"><?php echo htmlentities($user['RoleName']); ?></small>
+                                            class="fw-medium d-block"><?php echo htmlentities($admin['UserName']); ?></span>
+                                        <small
+                                            class="text-muted"><?php echo htmlentities($admin['fullname']); ?></small>
                                     </div>
                                 </div>
                             </a>
@@ -183,7 +179,8 @@ $notificationCount = $stmtNotifications->fetch(PDO::FETCH_ASSOC)['notification_c
                             <div class="dropdown-divider"></div>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="pages-profile-user.html">
+                            <a class="dropdown-item"
+                                href="pages-profile-user.php?uid=<?php echo $_SESSION['userid']; ?>">
                                 <i class="bx bx-user me-2"></i>
                                 <span class="align-middle">My Account</span>
                             </a>

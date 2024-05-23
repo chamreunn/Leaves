@@ -8,7 +8,7 @@ if (!isset($_SESSION['userid'])) {
 }
 
 // Determine if the current user is a superadmin
-$isSupperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin';
+$isSuperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin';
 
 ?>
 
@@ -30,10 +30,10 @@ $isSupperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin'
         <div class="layout-container">
             <!-- Navbar -->
             <?php
-            if ($isSupperAdmin) {
+            if ($isSuperAdmin) {
                 include('nav_admin.php');
             } else {
-                include('nav_admin.php');
+                include('navbar.php');
             }
             ?>
             <!-- / Navbar -->
@@ -41,9 +41,8 @@ $isSupperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'supperadmin'
             <div class="layout-page">
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
-                    Menu
                     <?php
-                    if ($isSupperAdmin) {
+                    if ($isSuperAdmin) {
                         include('sidebar_admin.php');
                     } else {
                         include('sidebar.php');

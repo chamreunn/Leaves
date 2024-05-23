@@ -7,7 +7,6 @@ if (!isset($_SESSION['userid'])) {
     header('Location: ../../index.php');
     exit();
 }
-
 $pageTitle = "របាយការណ៍សវនកម្ម";
 $sidebar = "audit";
 ob_start(); // Start output buffering
@@ -153,7 +152,7 @@ if ($admindepartment) {
                     </div>
                     <div>
                         <h6 class="mb-1 mef2 mx-0"><?php echo htmlspecialchars($notification['Title']); ?></h6>
-                        <p class="mb-1"><?php echo htmlspecialchars($notification['Descript']); ?></p>
+                        <p class="mb-1"><?php echo htmlspecialchars($notification['Description']); ?></p>
                         <small class="text-muted">Requested by:
                             <?php echo htmlspecialchars($notification['Firstname'] . ' ' . $notification['Lastname']); ?></small><br>
                         <small class="text-muted">Timestamp:

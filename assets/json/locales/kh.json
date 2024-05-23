@@ -52,5 +52,12 @@
   "Audit Reports": "របាយការណ៍សវនកម្ម",
   "Request Comment": "មតិស្នើសុំ",
   "Documents": "ឯកសារភ្ជាប់",
-  "Submit": "បញ្ជូន"
+  "Submit": "បញ្ជូន",
+  "Forgot Password": "ភ្លេចពាក្យសម្ងាត់?",
+  "Email": "អ៊ីមែល",
+  "Sent To Email":"ផ្ញើរទៅកាន់អ៊ីមែល",
+  "Back to login": "ត្រឡប់ទៅកាន់ទំព័រដើម",
+  "Reset Password": "ផ្លាស់ប្តូរពាក្យសម្ងាត់",
+  "New Password": "ពាក្យសម្ងាត់ថ្មី",
+  "Confirm Password": "បញ្ជាក់ពាក្យសម្ងាត់"
 }

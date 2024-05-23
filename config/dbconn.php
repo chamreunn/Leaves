@@ -1,9 +1,9 @@
 <?php
 // Database connection parameters
-$host = '172.16.15.66'; // Hostname
+$host = 'localhost'; // Hostname
 $dbname = 'employeeleavedb'; // Database name
 $username = 'root'; // Database username
-$password = '*Iau@20242024'; // Database password
+$password = ''; // Database password
 
 try {
   // Create a PDO instance

@@ -29,14 +29,27 @@ $currentUrl = basename($_SERVER['PHP_SELF']); // Get the current page filename
     style="touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
     <div class="container-xxl d-flex h-100">
         <ul class="menu-inner">
-            <?php foreach ($menuItems as $item): ?>
-            <li class="menu-item <?php echo ($item['NavigationUrl'] === $currentUrl) ? 'active' : ''; ?>">
-                <a href="<?php echo $item['NavigationUrl']; ?>" class="menu-link">
-                    <i class="menu-icon tf-icons bx <?php echo $item['IconClass']; ?>"></i>
-                    <div data-i18n="<?php echo $item['EngName']; ?>"><?php echo $item['PermissionName']; ?></div>
+
+            <li class="menu-item active">
+                <a href="dashboard.php" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-book"></i>
+                    <div data-i18n="Audit Reports">Audit Reports</div>
                 </a>
             </li>
-            <?php endforeach; ?>
         </ul>
     </div>
 </aside>
+
+
+<!-- <div class="container-xxl d-flex h-100">
+    <ul class="menu-inner">
+        <?php foreach ($menuItems as $item): ?>
+        <li class="menu-item <?php echo ($item['NavigationUrl'] === $currentUrl) ? 'active' : ''; ?>">
+            <a href="<?php echo $item['NavigationUrl']; ?>" class="menu-link">
+                <i class="menu-icon tf-icons bx <?php echo $item['IconClass']; ?>"></i>
+                <div data-i18n="<?php echo $item['EngName']; ?>"><?php echo $item['PermissionName']; ?></div>
+            </a>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+</div> -->

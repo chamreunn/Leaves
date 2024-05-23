@@ -1,5 +1,7 @@
 <?php
+declare(strict_types=1);
 session_start();
+
 include('../../config/dbconn.php');
 
 // Redirect to index page if the user is not authenticated
@@ -8,7 +10,7 @@ if (!isset($_SESSION['userid'])) {
     exit();
 }
 
-declare(strict_types=1);
+
 require '../../vendor/autoload.php';
 
 // Initialize Google Authenticator

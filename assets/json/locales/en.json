@@ -48,5 +48,8 @@
   "confirm_password_label": "Confirm Password",
   "save_button": "Save Changes",
   "Manage Users": "Manage Users",
-  "Audit Reports": "Audit Reports"
+  "Audit Reports": "Audit Reports",
+  "Forgot Password": "Forgot Password",
+  "Email": "Email",
+  "Sent To Email": "Sent To Email"
 }

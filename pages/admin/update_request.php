@@ -1,5 +1,4 @@
 <?php
-session_start();
 include('../../config/dbconn.php');
 
 // Redirect to index page if the user is not authenticated
