@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 session_start();
 include('../../config/dbconn.php');
 
@@ -9,22 +8,13 @@ if (!isset($_SESSION['userid'])) {
     exit();
 }
 
-
-require '../../vendor/autoload.php';
-
-// Initialize Google Authenticator
-$secret = 'XVQ2UIGO75XRUKJO';
-$link = \Sonata\GoogleAuthenticator\GoogleQrUrl::generate('Long', $secret, 'Leaves');
-$g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
-
 $pageTitle = "ព័ត៌មានគណនី";
-$sidebar = "all-user-permission";
+$sidebar = "alluser";
 ob_start(); // Start output buffering
+include('../../config/dbconn.php');
 include('../../controllers/form_process.php');
-
 // Retrieve user information from the database based on the provided user ID
-$getid = isset($_GET['uid']) ? intval($_GET['uid']) : 0;
-
+$getid = $_GET['uid'];
 $sql = "SELECT u.*, r.RoleName, oh.*, d.*
         FROM tbluser u
         LEFT JOIN tblrole r ON u.RoleId = r.id
@@ -37,22 +27,18 @@ $query->execute();
 $userData = $query->fetch(PDO::FETCH_ASSOC);
 
 // Function to generate initials from user's name
-function generateInitials(string $name): string
+function generateInitials($name)
 {
-  $initials = '';
-  $nameParts = explode(' ', $name);
-  foreach ($nameParts as $part) {
-    $initials .= strtoupper(substr($part, 0, 1));
-  }
-  return $initials;
+$initials = '';
+$nameParts = explode(' ', $name);
+foreach ($nameParts as $part) {
+$initials .= strtoupper(substr($part, 0, 1));
 }
-
+return $initials;
+}
 // Check if user data exists
 if ($userData) {
-  // Your code to display user information goes here
-  // Example: echo '<p>' . htmlspecialchars($userData['UserName'], ENT_QUOTES, 'UTF-8') . '</p>';
 ?>
-
 <div class="row">
     <div class="col-12">
         <div class="card mb-3">
@@ -76,8 +62,8 @@ if ($userData) {
                         <label for="profileInput" class="profile-image">
                             <?php if (!empty($userData['Profile'])) : ?>
                             <img src="<?php echo htmlentities($userData['Profile']); ?>" alt="user image"
-                                class="d-block h-auto ms-0 ms-sm-5 rounded border p-1 bg-light user-profile-img"
-                                height="150" width="150" style="object-fit: cover;">
+                                class="d-block h-auto ms-0 ms-sm-5 rounded border p-1 bg-light user-profile-img shadow-sm"
+                                height="150px" width="150px" style="object-fit: cover;">
                             <?php else : ?>
                             <!-- Placeholder image or initials -->
                             <span class="avatar-initial rounded-circle bg-label-success">
@@ -126,25 +112,17 @@ if ($userData) {
             <!-- Profile Tab (Always Visible) -->
             <li class="nav-item">
                 <a class="nav-link <?php if ($sidebar == 'alluser') echo 'active'; ?>"
-                    href="all-users-detail.php?uid=<?php echo $getid; ?>">
+                    href="pages-profile-user.php?uid=<?php echo $getid; ?>">
                     <i class='bx bx-user-circle me-2'></i>
                     <span data-i18n="profile.title">Profile</span>
                 </a>
             </li>
             <!-- Security Tab -->
             <li class="nav-item">
-                <a class="nav-link <?php if ($sidebar == 'all-user-security') echo 'active'; ?>"
+                <a class="nav-link <?php if ($sidebar == 'all-users-security') echo 'active'; ?>"
                     href="all-users-security.php?uid=<?php echo $getid; ?>">
                     <i class="bx bx-shield me-1"></i>
                     <span data-i18n="security">Security</span>
-                </a>
-            </li>
-            <!-- Permission Tab -->
-            <li class="nav-item">
-                <a class="nav-link <?php if ($sidebar == 'all-user-permission') echo 'active'; ?>"
-                    href="all-users-permission.php?uid=<?php echo $getid; ?>">
-                    <i class="bx bx-lock me-1"></i>
-                    <span data-i18n="permission">Permission</span>
                 </a>
             </li>
         </ul>
@@ -152,7 +130,6 @@ if ($userData) {
 </div>
 
 <div class="row">
-    <!-- user-detail -->
     <div class="col-xl-4 col-lg-5 col-md-5">
         <!-- About User -->
         <div class="card mb-3">
@@ -233,118 +210,54 @@ if ($userData) {
         </div>
         <!--/ About User -->
     </div>
-    <!-- end-user-detail -->
-    <!-- user-security -->
-    <div class="col-xl-8 col-lg-7 col-md-7 order-0 order-md-1">
-        <!-- Project table -->
-        <div class="card mb-4">
-            <!-- Notifications -->
-            <div class="card-header">
-                <h5 class="card-title">ការអនុញ្ញាតបច្ចុប្បន្ន</h5>
-                <span
-                    class="card-subtitle">ប្រសិនបើធ្វើការផ្លាស់ប្តរូការអនុញ្ញាតគណនីរបស់ថ្នាក់ដឹកនាំនិងមន្រ្តីនិងមានមុខងារបន្ថែមឬបន្ថយទៅតាមការអនុញ្ញាតនិមួយៗ។</span>
+
+    <div class="col-xl-8 col-lg-7 col-md-7">
+        <!-- Activity Timeline -->
+        <div class="card card-action mb-4">
+            <?php
+        // Query to fetch activity timeline data for the user
+        $sqlActivity = "SELECT * FROM tblactivity WHERE UserId = :id ORDER BY ActivityDate DESC";
+        $queryActivity = $dbh->prepare($sqlActivity);
+        $queryActivity->bindParam(':id', $getid, PDO::PARAM_INT);
+        $queryActivity->execute();
+        $activityData = $queryActivity->fetchAll(PDO::FETCH_ASSOC);
+        if ($activityData) : ?>
+            <!-- Display activity timeline events -->
+            <div class="card-body">
+                <div class="timeline ms-2">
+                    <?php foreach ($activityData as $activity) : ?>
+                    <ul class="timeline ms-2">
+                        <li class="timeline-item timeline-item-transparent">
+                            <span class="timeline-point-wrapper"><span
+                                    class="timeline-point timeline-point-warning"></span></span>
+                            <div class="timeline-event">
+                                <div class="timeline-header mb-1">
+                                    <h6 class="mb-0"><?php echo htmlentities($activity['ActivityName']); ?></h6>
+                                    <small
+                                        class="text-muted"><?php echo date('M d, Y h:iA', strtotime($activity['ActivityDate'])); ?>
+                                    </small>
+                                </div>
+                                <p class="mb-2"><?php echo htmlentities($activity['ActivityDescription']); ?></p>
+                            </div>
+                        </li>
+                    </ul>
+                    <?php endforeach; ?>
+                </div>
             </div>
-            <form id="formAuthentication" class="row g-3 mb-3" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="login_type" value="update-permission">
-                <input type="hidden" name="upermission" value="<?php echo $getid ?>">
-                <div class="table-responsive">
-                    <table class="table border-top mb-1 table-striped">
-                        <thead>
-                            <tr>
-                                <th class="text-nowrap">Type</th>
-                                <th class="text-nowrap text-center">Permission</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-// Assuming $getid contains the user ID
-$sql = "SELECT tblpermission.id AS permissionId, tblpermission.PermissionName,
-               IFNULL(FIND_IN_SET(tblpermission.id, tbluser.PermissionId), 0) AS selected
-        FROM tblpermission
-        LEFT JOIN tbluser ON FIND_IN_SET(tblpermission.id, tbluser.PermissionId) AND tbluser.id = :getid";
-
-$query = $dbh->prepare($sql);
-$query->bindParam(':getid', $getid, PDO::PARAM_INT);
-$query->execute();
-$permissions = $query->fetchAll(PDO::FETCH_OBJ);
-
-if ($query->rowCount() > 0) {
-    foreach ($permissions as $permission) {
-        $permissionId = $permission->permissionId;
-        $permissionName = $permission->PermissionName;
-        $selected = $permission->selected;
-        ?>
-                            <tr>
-                                <td class="text-nowrap fw-medium">
-                                    <?php echo $permissionName; ?>
-                                </td>
-                                <td class="d-flex flex-row justify-content-center">
-                                    <label class="switch switch-primary">
-                                        <input type="checkbox" name="pid[]" value="<?php echo $permissionId; ?>"
-                                            <?php echo $selected ? 'checked' : ''; ?>
-                                            class="switch-input permission-toggle">
-                                        <span class="switch-toggle-slider">
-                                            <span class="switch-on">
-                                                <i class="bx bx-check"></i>
-                                            </span>
-                                            <span class="switch-off">
-                                                <i class="bx bx-x"></i>
-                                            </span>
-                                        </span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <?php
-    }
-} else {
-    // Handle case where no permissions are found
-    ?>
-                            <tr>
-                                <td colspan="2">No permissions found.</td>
-                            </tr>
-                            <?php
-}
-?>
-
-                        </tbody>
-
-                    </table>
+            <?php else : ?>
+            <div class="card-body">
+                <div class="d-flex flex-column align-items-center justify-content-center">
+                    <img src="../../assets/img/illustrations/no-data.svg" alt="" class="p-3 mb-2" width="150"
+                        height="150" style="object-fit: cover;">
+                    <p class="fw-bolder">មិនទាន់មានសកម្មភាពនៅឡើយ។</p>
                 </div>
-                <div>
-                    <button type="button" class="btn btn-primary me-2 mx-3" data-bs-toggle="modal"
-                        data-bs-target="#exampleModal">
-                        រក្សាទុកការផ្លាស់ប្តូរ
-                    </button>
-                </div>
-                <!-- Modal -->
-                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5 mef2" id="exampleModalLabel">
-                                    ផ្លាស់ប្តូរការអនុញ្ញាតិ
-                                </h1>
-                            </div>
-                            <div class="modal-body">
-                                តើអ្នកប្រាកដទេថានិងផ្លាស់ប្តូរការកំណត់នេះ?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-label-secondary"
-                                    data-bs-dismiss="modal">មិនទាន់</button>
-                                <button type="submit" class="btn btn-danger">យល់ព្រម</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!--/ Layout container -->
-            </form>
+            </div>
+            <?php endif; ?>
         </div>
-        <!-- /Project table -->
+        <!--/ Activity Timeline -->
     </div>
-    <!-- end-user-security -->
-</div>
 
+</div>
 <script>
 // Display selected profile image
 document.getElementById('profileInput').addEventListener('change', function() {
@@ -365,6 +278,4 @@ document.getElementById('profileInput').addEventListener('change', function() {
   echo "<div class='text-center'>User not found.</div>";
 }
 $content = ob_get_clean(); ?>
-<!-- <script src="../../assets/js/form-validat
-ion.js"></script> -->
 <?php include('../../includes/layout.php'); ?>
