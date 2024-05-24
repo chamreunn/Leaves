@@ -1,6 +1,4 @@
 <?php
-// include('../config/dbconn.php');
-
 // Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $loginType = $_POST['login_type'];
@@ -36,8 +34,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       }
 
       $dbh->exec($sql);
-      sleep(2); // Optional delay
-      $msg = "Settings saved successfully";
+      sleep(1);
+      $msg = "ផ្លាស់ប្តូរបានជោគជ័យ";
+      header("Location: ../supperadmin/settings.php?status=success&msg=" . urlencode($msg));
+      exit();
     } catch (PDOException $e) {
       echo "Connection failed: " . $e->getMessage();
     }
@@ -96,7 +96,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           $stmtInsertRolePermission->execute();
         }
 
-        $msg = "Role updated successfully";
+        sleep(1);
+        $msg = "បានបង្កើតររួចរាល់";
+        header("Location: ../supperadmin/role.php?status=success&msg=" . urlencode($msg));
+        exit();
       } else {
         // If there's an error
         $error = "Error updating role";
@@ -819,6 +822,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       // Handle database errors
       error_log("Database error: " . $e->getMessage());
       $error = "Database error: " . $e->getMessage();
+    }
+  } elseif (isset($_POST['login_type']) && $_POST['login_type'] == 'updatedimg') {
+    // Check if the file input is set and not empty
+    if (isset($_FILES['updateimg']) && !empty($_FILES['updateimg']['name'])) {
+      $userId = $_POST['userId'];
+      $profileImg = $_FILES['updateimg'];
+
+      // File upload directory
+      $uploadDir = '../../uploads/';
+
+      // Generate a unique filename for the uploaded image
+      $profileImgName = uniqid() . '_' . basename($profileImg['name']);
+      $targetFilePath = $uploadDir . $profileImgName;
+
+      // Check if file is a valid image
+      $validTypes = ['jpg', 'jpeg', 'png', 'gif'];
+      $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+      if (in_array($fileType, $validTypes)) {
+        // Move uploaded file to the specified directory
+        if (move_uploaded_file($profileImg['tmp_name'], $targetFilePath)) {
+          // Update user's profile image in the database
+          try {
+            $sql = "UPDATE tbluser SET Profile = :profileImg WHERE id = :userId";
+            $query = $dbh->prepare($sql);
+            $query->bindParam(':profileImg', $targetFilePath);
+            $query->bindParam(':userId', $userId, PDO::PARAM_INT);
+            $query->execute();
+
+            // Check if profile image is updated successfully
+            if ($query->rowCount() > 0) {
+              $msg = "Profile picture updated successfully.";
+            } else {
+              $error = "Failed to update profile picture.";
+            }
+          } catch (PDOException $e) {
+            $error = "Database error: " . $e->getMessage();
+          }
+        } else {
+          $error = "Error uploading profile picture.";
+        }
+      } else {
+        $error = "Invalid file type. Please upload a JPG, JPEG, PNG, or GIF image.";
+      }
+    } else {
+      $error = "No file selected.";
     }
   } else {
     $error = "Invalid login type.";
