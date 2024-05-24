@@ -185,9 +185,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       if ($_FILES['profile']['error'] == UPLOAD_ERR_OK) {
         $tmp_name = $_FILES["profile"]["tmp_name"];
         $name = basename($_FILES["profile"]["name"]);
-        $target_dir = __DIR__ . "../../assets/img/avatars/";
+        $target_dir = __DIR__ . "/var/www/html/assets/img/avatars/";
         $target_file = $target_dir . $name;
-        $relative_path = "../../assets/img/avatars/" . $name;
+        $relative_path = "/var/www/html/assets/img/avatars/" . $name;
 
         if (move_uploaded_file($tmp_name, $target_file)) {
           $profileImage = $relative_path;
@@ -197,17 +197,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       }
 
       // Check for duplicate username, email, firstname, lastname, and contact
-      $sql_check_duplicate = "SELECT * FROM tbluser WHERE UserName = :username OR Email = :email OR FirstName = :firstname OR LastName = :lastname OR Contact = :contact";
+      $sql_check_duplicate = "SELECT * FROM tbluser WHERE  Email = :email OR Contact = :contact";
       $stmt_check_duplicate = $dbh->prepare($sql_check_duplicate);
-      $stmt_check_duplicate->bindParam(':username', $username);
       $stmt_check_duplicate->bindParam(':email', $email);
-      $stmt_check_duplicate->bindParam(':firstname', $firstname);
-      $stmt_check_duplicate->bindParam(':lastname', $lastname);
       $stmt_check_duplicate->bindParam(':contact', $contact);
       $stmt_check_duplicate->execute();
 
       if ($stmt_check_duplicate->rowCount() > 0) {
-        $error = "User with the same username, email, firstname, lastname, or contact already exists.";
+        $error = "User with the same Email or Contact already exists.";
       } else {
         // Hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
