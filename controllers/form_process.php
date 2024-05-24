@@ -188,9 +188,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       if ($_FILES['profile']['error'] == UPLOAD_ERR_OK) {
         $tmp_name = $_FILES["profile"]["tmp_name"];
         $name = basename($_FILES["profile"]["name"]);
-        $target_dir = __DIR__ . "/var/www/html/assets/img/avatars/";
+        $target_dir = __DIR__ . "../../assets/img/avatars/";
         $target_file = $target_dir . $name;
-        $relative_path = "/var/www/html/assets/img/avatars/" . $name;
+        $relative_path = "../../assets/img/avatars/" . $name;
 
         if (move_uploaded_file($tmp_name, $target_file)) {
           $profileImage = $relative_path;
