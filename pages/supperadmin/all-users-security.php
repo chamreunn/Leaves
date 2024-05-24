@@ -127,7 +127,7 @@ if ($userData) {
             <!-- Profile Tab (Always Visible) -->
             <li class="nav-item">
                 <a class="nav-link <?php if ($sidebar == 'alluser') echo 'active'; ?>"
-                    href="pages-profile-user.php?uid=<?php echo $getid; ?>">
+                    href="all-users-detail.php?uid=<?php echo $getid; ?>">
                     <i class='bx bx-user-circle me-2'></i>
                     <span data-i18n="profile.title">Profile</span>
                 </a>
@@ -138,6 +138,14 @@ if ($userData) {
                     href="all-users-security.php?uid=<?php echo $getid; ?>">
                     <i class="bx bx-shield me-1"></i>
                     <span data-i18n="security">Security</span>
+                </a>
+            </li>
+            <!-- Permission Tab -->
+            <li class="nav-item">
+                <a class="nav-link <?php if ($sidebar == 'all-users-permission') echo 'active'; ?>"
+                    href="all-users-permission.php?uid=<?php echo $getid; ?>">
+                    <i class="bx bx-lock me-1"></i>
+                    <span data-i18n="permission">Permission</span>
                 </a>
             </li>
         </ul>
@@ -343,7 +351,7 @@ if ($userData) {
 
                         </div>
                     </div>
-                    <!-- <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
                         <div class="d-flex gap-2 align-items-center">
                             <i class="bx bx-message bx-md"></i>
                             <span class="d-flex flex-column custom-option-header">
@@ -357,11 +365,11 @@ if ($userData) {
                             data-bs-target="#twoFactorAuthTwo" data-bs-toggle="modal">
                             <i class="bx bx-user-plus me-1"></i>Connect
                         </a>
-                    </div> -->
+                    </div>
                 </div>
                 <?php } else { ?>
 
-                <!-- <div class="row">
+                <div class="row">
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
                         <div class="d-flex gap-2 align-items-center">
                             <i class="bx bx-cog bx-md"></i>
@@ -390,7 +398,7 @@ if ($userData) {
                             <i class="bx bx-user-plus me-1"></i>Connect
                         </a>
                     </div>
-                </div> -->
+                </div>
                 <?php } ?>
                 <p class="mb-0">Two-factor authentication adds an additional layer of security to your account by
                     requiring more than just a password to log in.
